@@ -1,0 +1,28 @@
+# Dados brutos e tratados pesados
+dados_brutos/*.csv
+dados_brutos/*.xlsx
+dados_brutos/*.xls
+dados_brutos/*.zip
+dados_tratados/*.csv
+dados_tratados/*.parquet
+
+# Jupyter Checkpoints
+.ipynb_checkpoints/
+
+# Python & Ambientes Virtuais
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+ENV/
+env/
+
+# Arquivos de Variáveis de Ambiente
+.env
+.env.*
+
+# Arquivos do Sistema e IDEs
+.DS_Store
+.vscode/
+.idea/
