@@ -1,11 +1,16 @@
 """
 Módulo para pré-processamento, limpeza e engenharia de recursos.
 
-Funções:
+Funções (Notebook 01 - Extração e Cruzamento):
     - limpar_coluna_ideb: converte colunas do IDEB de string para float
     - preparar_ideb: limpa e padroniza o DataFrame do IDEB para merge
     - fazer_merge_ano: cruza Censo de um ano com o IDEB já limpo
     - montar_painel: empilha os anos, remove IDEB nulo e cria ATINGIU_META
+
+Funções (Notebook 02 - Limpeza, EDA e Features):
+    - criar_alunos_por_turma: engenharia de feature (matrículas / turmas)
+    - tratar_faltantes_features: imputação de NaN em binárias e numéricas
+    - selecionar_features_por_correlacao: seleção por correlação com o alvo
 """
 import pandas as pd
 import numpy as np
@@ -144,3 +149,98 @@ def montar_painel(lista_dfs_anuais: list) -> pd.DataFrame:
     df_painel.loc[cond_nao_atingiu, 'ATINGIU_META'] = 0.0
 
     return df_painel
+
+def criar_alunos_por_turma(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Cria a coluna ALUNOS_POR_TURMA = QT_MAT_FUND_AI / QT_TUR_FUND_AI.
+    Divisão por zero é tratada como NaN.
+
+    Parâmetros:
+        df: DataFrame com as colunas QT_MAT_FUND_AI e QT_TUR_FUND_AI.
+
+    Retorna:
+        pd.DataFrame com a nova coluna adicionada.
+    """
+    df = df.copy()
+    df['ALUNOS_POR_TURMA'] = np.where(
+        df['QT_TUR_FUND_AI'] > 0,
+        df['QT_MAT_FUND_AI'] / df['QT_TUR_FUND_AI'],
+        np.nan
+    )
+    return df
+
+
+def tratar_faltantes_features(df: pd.DataFrame, colunas_binarias: list, colunas_numericas: list) -> tuple:
+    """
+    Trata valores faltantes nas colunas candidatas a features.
+
+    - Colunas binárias (IN_*): preenchidas com 0 (ausência provável).
+    - Colunas numéricas (QT_*, ALUNOS_POR_TURMA): imputadas com a mediana.
+
+    Parâmetros:
+        df: DataFrame com as colunas a tratar.
+        colunas_binarias: lista de nomes das colunas binárias.
+        colunas_numericas: lista de nomes das colunas numéricas contínuas.
+
+    Retorna:
+        tuple: (df_tratado, relatorio)
+            - df_tratado: DataFrame com NaN tratados.
+            - relatorio: dict {coluna: qtd_nans_preenchidos} para documentação.
+    """
+    df = df.copy()
+    relatorio = {}
+
+    for col in colunas_binarias:
+        if col in df.columns:
+            qtd = df[col].isna().sum()
+            if qtd > 0:
+                df[col] = df[col].fillna(0)
+                relatorio[col] = qtd
+
+    for col in colunas_numericas:
+        if col in df.columns:
+            qtd = df[col].isna().sum()
+            if qtd > 0:
+                mediana = df[col].median()
+                df[col] = df[col].fillna(mediana)
+                relatorio[col] = qtd
+
+    return df, relatorio
+
+
+def selecionar_features_por_correlacao(df: pd.DataFrame, coluna_alvo: str, limiar: float = 0.1, remover_redundantes: list = None) -> tuple:
+    """
+    Seleciona features com correlação (em módulo) acima do limiar com o alvo.
+    Opcionalmente remove features redundantes (ex: dummy trap) após a seleção.
+
+    Metodologia baseada no material da disciplina: calcula a matriz de correlação
+    de Pearson e seleciona variáveis cuja correlação absoluta com o alvo exceda
+    o limiar definido.
+
+    Parâmetros:
+        df: DataFrame contendo as features candidatas e a coluna alvo.
+        coluna_alvo: nome da coluna alvo (ex: 'ATINGIU_META').
+        limiar: valor mínimo de correlação absoluta para seleção (padrão: 0.1).
+        remover_redundantes: lista opcional de features a remover das selecionadas.
+
+    Retorna:
+        tuple: (correlacoes, selecionadas, descartadas)
+            - correlacoes: pd.Series com a correlação de cada feature com o alvo,
+              ordenada por valor absoluto decrescente.
+            - selecionadas: lista de nomes das features que passaram no critério,
+              excluindo as listadas em remover_redundantes.
+            - descartadas: lista de nomes das features descartadas.
+    """
+    corr_matrix = df.corr(numeric_only=True)
+    correlacoes = corr_matrix[coluna_alvo].drop(coluna_alvo, errors='ignore')
+    correlacoes = correlacoes.reindex(correlacoes.abs().sort_values(ascending=False).index)
+
+    selecionadas = correlacoes[correlacoes.abs() > limiar].index.tolist()
+    descartadas = correlacoes[correlacoes.abs() <= limiar].index.tolist()
+
+    if remover_redundantes:
+        for col in remover_redundantes:
+            if col in selecionadas:
+                selecionadas.remove(col)
+
+    return correlacoes, selecionadas, descartadas
