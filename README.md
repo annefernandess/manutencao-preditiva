@@ -78,8 +78,8 @@ ideb-previsao/
 │   └── 05_comparacao_final.ipynb
 ├── src/                      # Código-fonte Python reutilizável
 │   ├── __init__.py
-│   ├── data_loading.py       # Funções para leitura e junção dos dados
-│   ├── preprocessing.py      # Funções para limpeza e pré-processamento
+│   ├── carregamento_dados.py  # Funções para leitura e junção dos dados
+│   ├── preprocessamento.py   # Funções para limpeza e pré-processamento
 │   └── utils.py              # Funções utilitárias (estilo de plots, etc.)
 └── relatorio/                # Documentos, gráficos exportados e relatórios finais
     └── .gitkeep
