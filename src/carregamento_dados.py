@@ -1,78 +1,59 @@
 """
-Módulo para carregamento e cruzamento dos dados do Censo Escolar e do IDEB.
+Módulo para carregamento e validação dos dados do AI4I 2020 Predictive Maintenance.
 
 Funções:
-    - encontrar_coluna_uf: identifica automaticamente a coluna de UF em um DataFrame
-    - carregar_censo: lê um CSV do Censo Escolar (sep=";", encoding="latin1")
-    - carregar_ideb: lê o XLSX do IDEB com cabeçalho na linha 9
-    - filtrar_por_uf: filtra um DataFrame mantendo apenas registros de uma UF específica
+    - carregar_dataset: lê o CSV do dataset AI4I 2020
+    - validar_rotulo_falha: verifica consistência entre Machine failure e submodos
 """
 import pandas as pd
 
 
-# Nomes conhecidos da coluna de UF nos arquivos do INEP
-_COLUNAS_UF_POSSIVEIS = ["SG_UF", "sg_uf", "CO_UF_ESCOLA", "UF"]
-
-
-def encontrar_coluna_uf(colunas_df):
+def carregar_dataset(caminho: str) -> pd.DataFrame:
     """
-    Procura o nome exato da coluna de UF dentre as colunas do DataFrame.
+    Carrega o dataset AI4I 2020 Predictive Maintenance.
 
     Parâmetros:
-        colunas_df: pd.Index ou lista de strings com os nomes das colunas.
-
-    Retorna:
-        str: nome da coluna encontrada, ou None se nenhuma candidata for identificada.
-    """
-    for candidata in _COLUNAS_UF_POSSIVEIS:
-        if candidata in colunas_df:
-            return candidata
-    # Busca case-insensitive como último recurso
-    for col in colunas_df:
-        if col.strip().upper() in ("SG_UF", "UF"):
-            return col
-    return None
-
-
-def carregar_censo(caminho: str) -> pd.DataFrame:
-    """
-    Carrega um arquivo CSV de microdados do Censo Escolar.
-
-    Parâmetros:
-        caminho: caminho absoluto ou relativo para o arquivo .csv.
+        caminho: caminho para o arquivo CSV.
 
     Retorna:
         pd.DataFrame com os dados carregados.
     """
-    return pd.read_csv(caminho, sep=";", encoding="latin1", low_memory=False)
+    df = pd.read_csv(caminho)
+    return df
 
 
-def carregar_ideb(caminho: str) -> pd.DataFrame:
+def validar_rotulo_falha(df: pd.DataFrame) -> dict:
     """
-    Carrega o arquivo XLSX do IDEB (divulgação por escola).
+    Valida a consistência do rótulo Machine failure com os submodos de falha.
 
-    O arquivo original do INEP possui 9 linhas de cabeçalho textual antes
-    da tabela de dados, por isso usamos header=9.
+    Verifica se Machine failure == 1 sempre que pelo menos um dos submodos
+    (TWF, HDF, PWF, OSF, RNF) é 1, e vice-versa.
 
     Parâmetros:
-        caminho: caminho absoluto ou relativo para o arquivo .xlsx.
+        df: DataFrame contendo as colunas Machine failure, TWF, HDF, PWF, OSF, RNF.
 
     Retorna:
-        pd.DataFrame com os dados carregados.
+        dict com chaves:
+            - total: total de registros
+            - falhas: total de Machine failure == 1
+            - submodos_cols: lista dos nomes das colunas de submodo
+            - algum_submodo: total de linhas com pelo menos um submodo == 1
+            - consistentes: total de linhas onde Machine failure == (algum submodo == 1)
+            - inconsistentes: total de linhas inconsistentes
+            - df_inconsistentes: DataFrame com as linhas inconsistentes (vazio se nenhuma)
     """
-    return pd.read_excel(caminho, header=9)
+    submodos = ['TWF', 'HDF', 'PWF', 'OSF', 'RNF']
+    algum_submodo = (df[submodos].sum(axis=1) > 0).astype(int)
 
+    consistente = df['Machine failure'] == algum_submodo
+    inconsistentes = df[~consistente]
 
-def filtrar_por_uf(df: pd.DataFrame, coluna_uf: str, uf_alvo: str) -> pd.DataFrame:
-    """
-    Filtra um DataFrame mantendo apenas as linhas de uma UF específica.
-
-    Parâmetros:
-        df: DataFrame com os dados.
-        coluna_uf: nome da coluna que contém a sigla da UF.
-        uf_alvo: sigla da UF desejada (ex: "PB").
-
-    Retorna:
-        pd.DataFrame filtrado (cópia).
-    """
-    return df[df[coluna_uf].astype(str).str.strip().str.upper() == uf_alvo.upper()].copy()
+    return {
+        'total': len(df),
+        'falhas': int(df['Machine failure'].sum()),
+        'submodos_cols': submodos,
+        'algum_submodo': int(algum_submodo.sum()),
+        'consistentes': int(consistente.sum()),
+        'inconsistentes': int((~consistente).sum()),
+        'df_inconsistentes': inconsistentes,
+    }

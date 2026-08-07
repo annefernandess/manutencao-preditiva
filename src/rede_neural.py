@@ -8,17 +8,18 @@ Funções:
 """
 import numpy as np
 import pandas as pd
+from sklearn.metrics import f1_score, fbeta_score
 
 
 def calcular_arquitetura_mlp(N: int, d: int, margem: int = 0) -> dict:
     """
     Calcula o número máximo de neurônios na camada escondida pela Regra de Ouro
-    da generalização (N ≥ 10 * d_vc) e o total de pesos |W|.
+    da generalização (N >= 10 * d_vc) e o total de pesos |W|.
 
     Para uma rede com uma camada escondida:
         |W| = (d+1)*n + (n+1)
-    Isolando n da regra N ≥ 10*|W|:
-        n ≤ (N - 10) / (10 * (d + 2))
+    Isolando n da regra N >= 10*|W|:
+        n <= (N - 10) / (10 * (d + 2))
 
     Parâmetros:
         N: número de amostras de treino.
@@ -87,12 +88,14 @@ def criar_modelo_mlp(d: int, n: int, learning_rate: float = 0.01, l2_lambda: flo
 
 def grid_search_mlp(X_train, y_train, X_val, y_val, d: int, n: int,
                     learning_rates: list, batch_sizes: list, l2_lambdas: list,
-                    epochs: int = 50, verbose: int = 0) -> pd.DataFrame:
+                    use_class_weights: list = [False], epochs: int = 50, verbose: int = 0) -> pd.DataFrame:
     """
     Executa busca em grade manual de hiperparâmetros para MLP Keras.
 
-    Para cada combinação (learning_rate, batch_size, l2_lambda), treina um modelo
-    e registra a loss de validação (E_val) e a acurácia de validação.
+    Para cada combinação, treina um modelo e registra as métricas.
+    Devido ao desbalanceamento e a assimetria de custos (Falsos Negativos
+    são muito mais caros que Falsos Positivos na manutenção preditiva),
+    calcula o F1-Score e o F2-Score no conjunto de validação.
 
     Parâmetros:
         X_train, y_train: dados de treino (sem validação).
@@ -102,38 +105,57 @@ def grid_search_mlp(X_train, y_train, X_val, y_val, d: int, n: int,
         learning_rates: lista de taxas de aprendizado a testar.
         batch_sizes: lista de tamanhos de batch a testar.
         l2_lambdas: lista de coeficientes de regularização L2 a testar.
+        use_class_weights: lista de booleanos para testar class_weight.
         epochs: número de épocas por treino (padrão: 50).
         verbose: nível de verbosidade do Keras (0=silencioso).
 
     Retorna:
-        pd.DataFrame com colunas: learning_rate, batch_size, l2_lambda,
-        val_loss, val_accuracy — ordenado por val_loss ascendente.
+        pd.DataFrame com resultados ordenado por val_f2 descendente.
     """
     resultados = []
 
-    total = len(learning_rates) * len(batch_sizes) * len(l2_lambdas)
+    total = len(learning_rates) * len(batch_sizes) * len(l2_lambdas) * len(use_class_weights)
     i = 0
 
     for lr in learning_rates:
         for bs in batch_sizes:
             for l2 in l2_lambdas:
-                i += 1
-                print(f'  [{i}/{total}] lr={lr}, batch={bs}, L2={l2}', end=' ... ')
+                for use_cw in use_class_weights:
+                    i += 1
+                    cw_str = 'Sim' if use_cw else 'Não'
+                    print(f'  [{i}/{total}] lr={lr}, batch={bs}, L2={l2}, cw={cw_str}', end=' ... ')
 
-                model = criar_modelo_mlp(d, n, learning_rate=lr, l2_lambda=l2)
-                model.fit(X_train, y_train, epochs=epochs, batch_size=bs,
-                          verbose=verbose, validation_data=(X_val, y_val))
-                val_loss, val_acc = model.evaluate(X_val, y_val, verbose=0)
+                    cw = None
+                    if use_cw:
+                        n_neg = (y_train == 0).sum()
+                        n_pos = (y_train == 1).sum()
+                        # balanceamento de classes
+                        cw = {0: len(y_train)/(2*n_neg), 1: len(y_train)/(2*n_pos)}
 
-                print(f'E_val={val_loss:.4f}, acc_val={val_acc:.4f}')
+                    model = criar_modelo_mlp(d, n, learning_rate=lr, l2_lambda=l2)
+                    model.fit(X_train, y_train, epochs=epochs, batch_size=bs,
+                              class_weight=cw, verbose=verbose, validation_data=(X_val, y_val))
+                    
+                    val_loss, val_acc = model.evaluate(X_val, y_val, verbose=0)
+                    
+                    # Computa F1 Score and F2 Score
+                    y_val_pred_prob = model.predict(X_val, verbose=0)
+                    y_val_pred = (y_val_pred_prob >= 0.5).astype(int).ravel()
+                    val_f1 = f1_score(y_val, y_val_pred, zero_division=0)
+                    val_f2 = fbeta_score(y_val, y_val_pred, beta=2, zero_division=0)
 
-                resultados.append({
-                    'learning_rate': lr,
-                    'batch_size': bs,
-                    'l2_lambda': l2,
-                    'val_loss': val_loss,
-                    'val_accuracy': val_acc,
-                })
+                    print(f'E_val={val_loss:.4f}, acc_val={val_acc:.4f}, f1_val={val_f1:.4f}, f2_val={val_f2:.4f}')
 
-    df_resultados = pd.DataFrame(resultados).sort_values('val_loss').reset_index(drop=True)
+                    resultados.append({
+                        'learning_rate': lr,
+                        'batch_size': bs,
+                        'l2_lambda': l2,
+                        'class_weight': use_cw,
+                        'val_loss': val_loss,
+                        'val_accuracy': val_acc,
+                        'val_f1': val_f1,
+                        'val_f2': val_f2
+                    })
+
+    df_resultados = pd.DataFrame(resultados).sort_values('val_f2', ascending=False).reset_index(drop=True)
     return df_resultados

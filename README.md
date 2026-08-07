@@ -1,98 +1,104 @@
-# Previsão do Desempenho Escolar no IDEB com Aprendizagem de Máquina
+# 🔧 Manutenção Preditiva Industrial
 
-## 🎯 Objetivo do Projeto
-Este projeto de Aprendizagem de Máquina foi desenvolvido em grupo (2 pessoas) com o objetivo de **prever se uma escola atinge ou não a meta estabelecida pelo IDEB** (Índice de Desenvolvimento da Educação Básica). A análise é realizada cruzando dados de infraestrutura e perfil das escolas provenientes do **Censo Escolar** com os indicadores de desempenho e metas do **IDEB**, utilizando algoritmos de **Rede Neural** e **Árvore de Decisão**.
+## 📌 Objetivo
 
----
+Projeto de **Aprendizagem de Máquina** desenvolvido para a disciplina da UFPB, com o objetivo de prever se uma máquina industrial vai apresentar **falha** (`Machine failure = 1`) ou **não** (`Machine failure = 0`) a partir de leituras de sensores operacionais.
 
-## 📊 Fontes de Dados
-Os dados utilizados são públicos e fornecidos pelo **INEP (Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira)**:
+São utilizados dois modelos de classificação binária:
+- **Rede Neural (MLP)** — Perceptron Multicamadas com Keras/TensorFlow
+- **Árvore de Decisão** — Scikit-Learn
 
-1. **Censo Escolar (Microdados)**: Informações detalhadas sobre infraestrutura, matrículas, docentes e turmas das escolas brasileiras.
-   - 🔗 [Acesso aos Dados do Censo Escolar - INEP](https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-escolar)
-2. **IDEB (Resultados e Metas)**: Indicadores de rendimento escolar (aprovação) e notas nos exames Saeb por escola.
-   - 🔗 [Acesso aos Dados do IDEB - INEP](https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/ideb)
+Os modelos são avaliados e comparados quanto à capacidade de generalização, seguindo a teoria de aprendizagem de máquina (dimensão VC, Regra de Ouro, validação cruzada).
 
 ---
 
-## 👥 Integrantes do Grupo
-- **Integrante 1**: Anne Fernandes da Costa Oliveira
-- **Integrante 2**: João Vitor Pereira Costa
+## 📊 Dataset
+
+**AI4I 2020 Predictive Maintenance Dataset** — UCI Machine Learning Repository
+
+- **Link:** [https://archive.ics.uci.edu/dataset/601/ai4i+2020+predictive+maintenance+dataset](https://archive.ics.uci.edu/dataset/601/ai4i+2020+predictive+maintenance+dataset)
+- **Registros:** 10.000
+- **Features de sensores (preditoras):**
+  - `Air temperature [K]` — Temperatura do ar (Kelvin)
+  - `Process temperature [K]` — Temperatura do processo (Kelvin)
+  - `Rotational speed [rpm]` — Velocidade rotacional (rpm)
+  - `Torque [Nm]` — Torque (Newton-metro)
+  - `Tool wear [min]` — Desgaste da ferramenta (minutos)
+  - `Type` — Tipo de produto (L, M, H — variável categórica)
+- **Variável alvo:** `Machine failure` (0 = operação normal, 1 = falha)
+
+> [!WARNING]
+> **Desbalanceamento severo:** Apenas ~3,4% dos registros são falhas (339 de 10.000). A acurácia bruta é uma métrica enganosa nesse cenário. As métricas prioritárias são **Precisão, Recall e F1-Score da classe minoritária (falha)**.
+
+> [!CAUTION]
+> **Data leakage:** As colunas `TWF`, `HDF`, `PWF`, `OSF` e `RNF` representam os submodos de falha que **compõem** a variável alvo `Machine failure`. Usá-las como features causaria vazamento de dados e resultados artificialmente perfeitos. Essas colunas são **excluídas** do conjunto de features.
 
 ---
 
-## 🛠️ Como Configurar o Ambiente
+## 👥 Integrantes
 
-### Pré-requisitos
-- Python 3.9+ instalado
-- `pip` e `virtualenv`
-
-### Passo a Passo
-
-1. **Clonar o repositório e navegar até a pasta:**
-   ```bash
-   git clone <URL_DO_REPOSITORIO>
-   cd ideb-previsao
-   ```
-
-2. **Criar e ativar o ambiente virtual (`venv`):**
-   - No Linux/macOS:
-     ```bash
-     python3 -m venv venv
-     source venv/bin/activate
-     ```
-   - No Windows (PowerShell):
-     ```powershell
-     python -m venv venv
-     .\venv\Scripts\Activate.ps1
-     ```
-
-3. **Instalar as dependências do projeto:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Iniciar o Jupyter Notebook ou Jupyter Lab:**
-   ```bash
-   jupyter notebook
-   ```
+| Nome | Papel |
+|---|---|
+| Anne Fernandes | Desenvolvimento e análise |
+| *(a ser informado)* | Desenvolvimento e análise |
 
 ---
 
-## 📁 Estrutura de Pastas
+## 📁 Estrutura do Repositório
 
-```text
-ideb-previsao/
-├── README.md                 # Documentação principal do projeto
-├── requirements.txt           # Dependências de pacotes Python
-├── .gitignore                 # Arquivos e pastas ignorados pelo Git
-├── dados_brutos/             # Arquivos brutos baixados do INEP (CSV, XLSX)
+```
+manutencao-preditiva/
+├── README.md
+├── requirements.txt
+├── .gitignore
+├── dados_brutos/              # Dataset original (ai4i2020.csv)
+│   └── ai4i2020.csv
+├── dados_tratados/            # Datasets processados (gerados pelos notebooks)
 │   └── .gitkeep
-├── dados_tratados/           # Datasets resultantes da limpeza e merge
-│   └── .gitkeep
-├── notebooks/                # Jupyter Notebooks organizados sequencialmente
+├── notebooks/                 # Jupyter Notebooks organizados sequencialmente
 │   ├── 01_extracao_e_cruzamento.ipynb
 │   ├── 02_limpeza_e_eda.ipynb
 │   ├── 03_rede_neural.ipynb
 │   ├── 04_arvore_decisao.ipynb
 │   └── 05_comparacao_final.ipynb
-├── src/                      # Código-fonte Python reutilizável
+├── src/                       # Código-fonte Python reutilizável
 │   ├── __init__.py
-│   ├── carregamento_dados.py  # Funções para leitura e junção dos dados
-│   ├── preprocessamento.py   # Funções para limpeza e pré-processamento
-│   └── utils.py              # Funções utilitárias (estilo de plots, etc.)
-└── relatorio/                # Documentos, gráficos exportados e relatórios finais
-    └── .gitkeep
+│   ├── carregamento_dados.py  # Funções para leitura dos dados
+│   ├── preprocessamento.py    # Funções para limpeza e pré-processamento
+│   ├── rede_neural.py         # Funções para construção e treino da MLP
+│   └── utils.py               # Funções utilitárias (plotagem, etc.)
+├── modelos/                   # Modelos treinados salvos
+│   └── .gitkeep
+├── relatorio/                 # Documentos e relatórios finais
+│   └── .gitkeep
+└── arquivo_projeto_anterior/  # Dados e código do projeto anterior (Censo/IDEB)
 ```
 
 ---
 
 ## 🚀 Ordem de Execução dos Notebooks
 
-Para replicar os resultados, os notebooks na pasta `notebooks/` devem ser executados na ordem numérica:
+1. **`01_extracao_e_cruzamento.ipynb`**: Carregamento do dataset AI4I 2020, exploração inicial e separação de features.
+2. **`02_limpeza_e_eda.ipynb`**: Tratamento de dados, engenharia de features, EDA e divisão treino/teste.
+3. **`03_rede_neural.ipynb`**: Construção e treinamento do modelo MLP (dimensão VC, grid search, regularização).
+4. **`04_arvore_decisao.ipynb`**: Construção e treinamento do modelo de Árvore de Decisão.
+5. **`05_comparacao_final.ipynb`**: Comparação de métricas e conclusões.
 
-1. **`01_extracao_e_cruzamento.ipynb`**: Leitura das bases brutas do Censo Escolar e do IDEB e cruzamento via código de entidade escolar (`CO_ENTIDADE`).
-2. **`02_limpeza_e_eda.ipynb`**: Tratamento de dados faltantes, engenharia de variáveis e Análise Exploratória de Dados (EDA).
-3. **`03_rede_neural.ipynb`**: Construção e treinamento do modelo de Rede Neural (Keras / TensorFlow).
-4. **`04_arvore_decisao.ipynb`**: Construção e treinamento do modelo de Árvore de Decisão (Scikit-Learn).
-5. **`05_comparacao_final.ipynb`**: Avaliação cruzada, comparação de métricas de desempenho e consolidação das conclusões.
+---
+
+## 🛠️ Instalação
+
+```bash
+# Criar e ativar ambiente virtual
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Instalar dependências
+pip install -r requirements.txt
+```
+
+---
+
+## 📄 Licença
+
+Projeto acadêmico — UFPB.
