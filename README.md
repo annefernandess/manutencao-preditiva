@@ -53,11 +53,10 @@ manutencao-preditiva/
 ├── dados_tratados/            # Datasets processados (gerados pelos notebooks)
 │   └── .gitkeep
 ├── notebooks/                 # Jupyter Notebooks organizados sequencialmente
-│   ├── 01_extracao_e_cruzamento.ipynb
-│   ├── 02_limpeza_e_eda.ipynb
-│   ├── 03_rede_neural.ipynb
-│   ├── 04_arvore_decisao.ipynb
-│   └── 05_comparacao_final.ipynb
+│   ├── 01_extracao_e_eda.ipynb
+│   ├── 02_rede_neural.ipynb
+│   ├── 03_arvore_decisao.ipynb
+│   └── 04_comparacao_final.ipynb
 ├── src/                       # Código-fonte Python reutilizável
 │   ├── __init__.py
 │   ├── carregamento_dados.py  # Funções para leitura dos dados
@@ -75,11 +74,10 @@ manutencao-preditiva/
 
 ## 🚀 Ordem de Execução dos Notebooks
 
-1. **`01_extracao_e_cruzamento.ipynb`**: Carregamento do dataset AI4I 2020, exploração inicial e separação de features.
-2. **`02_limpeza_e_eda.ipynb`**: Tratamento de dados, engenharia de features, EDA e divisão treino/teste.
-3. **`03_rede_neural.ipynb`**: Construção e treinamento do modelo MLP (dimensão VC, grid search, regularização).
-4. **`04_arvore_decisao.ipynb`**: Construção e treinamento do modelo de Árvore de Decisão.
-5. **`05_comparacao_final.ipynb`**: Comparação de métricas e conclusões.
+1. **`01_extracao_e_eda.ipynb`**: Carregamento do dataset AI4I 2020, exploração inicial, EDA e divisão treino/teste e separação de features.
+2. **`02_rede_neural.ipynb`**: Construção e treinamento do modelo MLP (dimensão VC, grid search, regularização).
+3. **`03_arvore_decisao.ipynb`**: Construção e treinamento do modelo de Árvore de Decisão.
+4. **`04_comparacao_final.ipynb`**: Comparação de métricas e conclusões.
 
 ---
 
