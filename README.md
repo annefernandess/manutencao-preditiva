@@ -37,11 +37,8 @@ Os modelos são avaliados e comparados quanto à capacidade de generalização, 
 
 ## 👥 Integrantes
 
-| Nome | Papel |
-|---|---|
-| Anne Fernandes | Desenvolvimento e análise |
-| *(a ser informado)* | Desenvolvimento e análise |
-
+- Anne Fernandes da Costa Oliveira
+- João Vitor Pereira Costa
 ---
 
 ## 📁 Estrutura do Repositório
