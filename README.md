@@ -28,7 +28,7 @@ Os modelos são avaliados e comparados quanto à capacidade de generalização, 
 - **Variável alvo:** `Machine failure` (0 = operação normal, 1 = falha)
 
 > [!WARNING]
-> **Desbalanceamento severo:** Apenas ~3,4% dos registros são falhas (339 de 10.000). A acurácia bruta é uma métrica enganosa nesse cenário. As métricas prioritárias são **Precisão, Recall e F1-Score da classe minoritária (falha)**.
+> **Desbalanceamento severo:** Apenas ~3,4% dos registros são falhas (339 de 10.000). A acurácia bruta é uma métrica enganosa nesse cenário. As métricas prioritárias são **Precisão, Recall, F1-Score e F2-Score da classe minoritária (falha)**, com destaque especial para o **F2-Score**, dado o altíssimo custo de um falso negativo (deixar de detectar uma falha) na indústria.
 
 > [!CAUTION]
 > **Data leakage:** As colunas `TWF`, `HDF`, `PWF`, `OSF` e `RNF` representam os submodos de falha que **compõem** a variável alvo `Machine failure`. Usá-las como features causaria vazamento de dados e resultados artificialmente perfeitos. Essas colunas são **excluídas** do conjunto de features.
@@ -51,7 +51,10 @@ manutencao-preditiva/
 ├── dados_brutos/              # Dataset original (ai4i2020.csv)
 │   └── ai4i2020.csv
 ├── dados_tratados/            # Datasets processados (gerados pelos notebooks)
-│   └── .gitkeep
+│   ├── X_train.csv
+│   ├── X_test.csv
+│   ├── y_train.csv
+│   └── y_test.csv
 ├── notebooks/                 # Jupyter Notebooks organizados sequencialmente
 │   ├── 01_extracao_e_eda.ipynb
 │   ├── 02_rede_neural.ipynb
@@ -62,9 +65,12 @@ manutencao-preditiva/
 │   ├── carregamento_dados.py  # Funções para leitura dos dados
 │   ├── preprocessamento.py    # Funções para limpeza e pré-processamento
 │   ├── rede_neural.py         # Funções para construção e treino da MLP
+│   ├── arvore_decisao.py      # Funções para a Árvore de Decisão e Random Forest
 │   └── utils.py               # Funções utilitárias (plotagem, etc.)
 ├── modelos/                   # Modelos treinados salvos
-│   └── .gitkeep
+│   ├── rede_neural.keras      # Rede Neural
+│   ├── arvore_decisao.pkl     # Árvore de Decisão Podada
+│   └── random_forest.pkl      # Random Forest
 ├── relatorio/                 # Documentos e relatórios finais
 │   └── .gitkeep
 └── arquivo_projeto_anterior/  # Dados e código do projeto anterior (Censo/IDEB)
