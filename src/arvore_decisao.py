@@ -1,6 +1,4 @@
 """
-src/arvore_decisao.py
----------------------
 Funções auxiliares para treinamento e avaliação de Árvore de Decisão
 e Random Forest no projeto de Manutenção Preditiva.
 """
