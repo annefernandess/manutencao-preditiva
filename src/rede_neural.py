@@ -66,7 +66,7 @@ def grid_search_mlp(X_train, y_train, X_val, y_val, d: int, n: int,
                     if use_cw:
                         n_neg = (y_train == 0).sum()
                         n_pos = (y_train == 1).sum()
-                        # balanceamento de classes
+
                         cw = {0: len(y_train)/(2*n_neg), 1: len(y_train)/(2*n_pos)}
 
                     model = criar_modelo_mlp(d, n, learning_rate=lr, l2_lambda=l2)
@@ -75,7 +75,6 @@ def grid_search_mlp(X_train, y_train, X_val, y_val, d: int, n: int,
                     
                     val_loss, val_acc = model.evaluate(X_val, y_val, verbose=0)
                     
-                    # Computa F1 Score and F2 Score
                     y_val_pred_prob = model.predict(X_val, verbose=0)
                     y_val_pred = (y_val_pred_prob >= 0.5).astype(int).ravel()
                     val_f1 = f1_score(y_val, y_val_pred, zero_division=0)
