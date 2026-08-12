@@ -14,7 +14,6 @@ def preparar_features(df: pd.DataFrame, colunas_excluir: list,
                             prefix=[coluna_categorica],
                             drop_first=drop_first_dummy, dtype=float)
 
-    # Remover colunas proibidas
     colunas_a_dropar = [c for c in colunas_excluir if c in df.columns]
     df = df.drop(columns=colunas_a_dropar)
 
