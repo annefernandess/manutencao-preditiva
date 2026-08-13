@@ -38,7 +38,7 @@ Os modelos são avaliados e comparados quanto à capacidade de generalização, 
 ## 👥 Integrantes
 
 - Anne Fernandes da Costa Oliveira
-- João Vitor Pereira Costa
+- João Vitor Pereira da Costa
 ---
 
 ## 📁 Estrutura do Repositório
@@ -71,7 +71,7 @@ manutencao-preditiva/
 │   ├── rede_neural.keras      # Rede Neural
 │   ├── arvore_decisao.pkl     # Árvore de Decisão Podada
 │   └── random_forest.pkl      # Random Forest
-├── relatorio/                 # Documentos e relatórios finais
+├── relatorio/                 # Relatórios final
 │   └── .gitkeep
 └── arquivo_projeto_anterior/  # Dados e código do projeto anterior (Censo/IDEB)
 ```
