@@ -65,8 +65,8 @@ manutencao-preditiva/
 │   ├── carregamento_dados.py  # Funções para leitura dos dados
 │   ├── preprocessamento.py    # Funções para limpeza e pré-processamento
 │   ├── rede_neural.py         # Funções para construção e treino da MLP
-│   ├── arvore_decisao.py      # Funções para a Árvore de Decisão e Random Forest
-│   └── utils.py               # Funções utilitárias (plotagem, etc.)
+│   └── arvore_decisao.py      # Funções para a Árvore de Decisão e Random Forest
+│ 
 ├── modelos/                   # Modelos treinados salvos
 │   ├── rede_neural.keras      # Rede Neural
 │   ├── arvore_decisao.pkl     # Árvore de Decisão Podada
